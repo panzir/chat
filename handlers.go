@@ -7,6 +7,7 @@ import (
     "fmt"
     "sync"
     //"time"
+    "encoding/json"
     
     "github.com/gorilla/websocket"
     "github.com/gorilla/mux"
@@ -195,8 +196,11 @@ func (app *Application) WS (w http.ResponseWriter, r *http.Request) {
             continue
         }
         if RABBIT {
-            ss := string(strconv.Itoa(header.Id)+";"+strconv.Itoa(header.Room))
-            app.RabbitPublish(ss)
+            jsn, err := json.Marshal(header)
+            if err != nil {
+                continue
+            }
+            app.RabbitPublish(jsn)
         } else {
             app.messagePool <- header
         }

@@ -3,9 +3,8 @@ package main
 import (
     "context"
     "log"
-    "strings"
-    "strconv"
     "time"
+    "encoding/json"
     amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -15,7 +14,7 @@ func failOnError(err error, msg string) {
     }
 }
 
-func (app *Application) RabbitPublish(msg string) {
+func (app *Application) RabbitPublish(jsn []byte) {
     conn, err := amqp.Dial("amqp://guest:guest@" + HOST_RABBIT)
     failOnError(err, "Failed to connect to RabbitMQ")
     defer conn.Close()
@@ -38,14 +37,15 @@ func (app *Application) RabbitPublish(msg string) {
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
 
-    body := msg
+    body := jsn
     err = ch.PublishWithContext(ctx,
         "chat", // exchange
         "",     // routing key
         false,  // mandatory
         false,  // immediate
         amqp.Publishing{
-            ContentType: "text/plain",
+            //ContentType: "text/plain",
+            ContentType: "application/json",
             Body:        []byte(body),
         })
     failOnError(err, "Failed to publish a message")
@@ -107,12 +107,8 @@ func (app *Application) RabbitReceiver() {
     
     go func() {
         for d := range msgs {
-            s := string(d.Body)
-            ss := strings.Split(s,";")
-            id, _ := strconv.Atoi(ss[0])
-            room, _ := strconv.Atoi(ss[1])
-            header := MessageHeader{Id: id, Room: room}
-            
+            header := MessageHeader{}
+            _ = json.Unmarshal(d.Body,&header)
             app.messagePool <- header
             
             //log.Printf(" [x] %s", d.Body)

@@ -20,8 +20,8 @@ type Message struct {
 }
 
 type MessageHeader struct {
-    Id int
-    Room int
+    Id int      `json:"id"`
+    Room int    `json:"room"`
 }
 
 type Room struct {
