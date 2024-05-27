@@ -1,0 +1,36 @@
+ 
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Chat</title>
+</head>
+
+<body>
+  <h1>Chat</h1>
+  <p><a href='/signout'>Выйти из комнаты</a></p>
+  
+  <input id="input" type="text" placeholder="Введите сообщение">
+  <button onclick="sendMessage()">ОК</button>
+  <ul id="messages"></ul>
+
+  <script>
+    const messages = document.getElementById('messages');
+    const input = document.getElementById('input');
+    //const ws = new WebSocket('ws://localhost:8888/ws');
+    const ws = new WebSocket('{{ . }}');
+    
+    ws.onmessage = function(event) {
+      const li = document.createElement('li');
+      li.innerText = event.data;
+      messages.appendChild(li);
+    };
+    
+    function sendMessage() {
+      ws.send(input.value);
+      input.value = '';
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+# CGO_ENABLED=0 go build -o main .
+# docker build -t example-chat -f Dockerfile.scratch .
+
+FROM alpine:3.9 as builder
+RUN apk update && apk add ca-certificates tzdata
+
+FROM scratch
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo/
+COPY ./main ./
+ADD html ./html
+CMD ["./main", "--addr=127.0.0.1:8002"]
