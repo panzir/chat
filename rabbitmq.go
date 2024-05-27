@@ -14,7 +14,7 @@ func failOnError(err error, msg string) {
     }
 }
 
-func (app *Application) RabbitPublish(jsn []byte) {
+func (h *MessageHeader) RabbitPublish() {
     conn, err := amqp.Dial("amqp://guest:guest@" + HOST_RABBIT)
     failOnError(err, "Failed to connect to RabbitMQ")
     defer conn.Close()
@@ -36,8 +36,11 @@ func (app *Application) RabbitPublish(jsn []byte) {
 
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
-
-    body := jsn
+    
+    jsn, err := json.Marshal(h)
+    if err != nil {
+        return
+    }
     err = ch.PublishWithContext(ctx,
         "chat", // exchange
         "",     // routing key
@@ -46,7 +49,7 @@ func (app *Application) RabbitPublish(jsn []byte) {
         amqp.Publishing{
             //ContentType: "text/plain",
             ContentType: "application/json",
-            Body:        []byte(body),
+            Body:        []byte(jsn),
         })
     failOnError(err, "Failed to publish a message")
 
